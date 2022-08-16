@@ -1,5 +1,8 @@
 import React from "react";
 import "react-calendar-timeline/lib/Timeline.css";
+import Button from "@mui/material/Button";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 //https://github.com/namespace-ee/react-calendar-timeline/tree/master/examples
 
@@ -51,6 +54,12 @@ export class MonthTimeline extends React.Component {
     });
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (this.props !== nextProps) {
+      this.setState(nextProps);
+    }
+  }
+
   onPrevClick = () => {
     this.setState((state) => {
       const zoom = state.visibleTimeEnd - state.visibleTimeStart;
@@ -71,70 +80,79 @@ export class MonthTimeline extends React.Component {
       };
     });
   };
-  handleItemSelect = (itemId, _, time) => {
-    console.log("Selected: " + itemId, moment(time).format());
-  };
+  // handleItemSelect = (itemId, _, time) => {
+  //   console.log("Selected: " + itemId, moment(time).format());
+  // };
 
-  itemRenderer = ({
-    item,
-    timelineContext,
-    itemContext,
-    getItemProps,
-    getResizeProps,
-  }) => {
-    debugger;
-    const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
-    const backgroundColor = itemContext.selected
-      ? itemContext.dragging
-        ? "red"
-        : item.selectedBgColor
-      : item.bgColor;
-    const borderColor = itemContext.resizing ? "red" : item.color;
-    return (
-      <div
-        {...getItemProps({
-          style: {
-            backgroundColor,
-            color: item.color,
-            borderColor,
-            borderStyle: "solid",
-            borderWidth: 1,
-            borderRadius: 4,
-            borderLeftWidth: itemContext.selected ? 3 : 1,
-            borderRightWidth: itemContext.selected ? 3 : 1,
-          },
-          onMouseDown: () => {
-            console.log("on item click", item);
-          },
-        })}
-      >
-        {itemContext.useResizeHandle ? <div {...leftResizeProps} /> : null}
+  // itemRenderer = ({
+  //   item,
+  //   timelineContext,
+  //   itemContext,
+  //   getItemProps,
+  //   getResizeProps,
+  // }) => {
+  //   const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
+  //   const backgroundColor = itemContext.selected
+  //     ? itemContext.dragging
+  //       ? "red"
+  //       : item.selectedBgColor
+  //     : item.bgColor;
+  //   const borderColor = itemContext.resizing ? "red" : item.color;
+  //   return (
+  //     <div
+  //       {...getItemProps({
+  //         style: {
+  //           backgroundColor,
+  //           color: item.color,
+  //           borderColor,
+  //           borderStyle: "solid",
+  //           borderWidth: 1,
+  //           borderRadius: 4,
+  //           borderLeftWidth: itemContext.selected ? 3 : 1,
+  //           borderRightWidth: itemContext.selected ? 3 : 1,
+  //         },
+  //         onMouseDown: () => {
+  //           console.log("on item click", item);
+  //         },
+  //       })}
+  //     >
+  //       {itemContext.useResizeHandle ? <div {...leftResizeProps} /> : null}
 
-        <div
-          style={{
-            height: itemContext.dimensions.height,
-            overflow: "hidden",
-            paddingLeft: 3,
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {itemContext.title}
-        </div>
-      </div>
-    );
-  };
+  //       <div
+  //         style={{
+  //           height: itemContext.dimensions.height,
+  //           overflow: "hidden",
+  //           paddingLeft: 3,
+  //           textOverflow: "ellipsis",
+  //           whiteSpace: "nowrap",
+  //         }}
+  //       >
+  //         {itemContext.title}
+  //       </div>
+  //     </div>
+  //   );
+  // };
 
   render() {
     const { visibleTimeStart, visibleTimeEnd, groups, items } = this.state;
 
+    console.log(groups);
+
     return (
       <div>
-        <div className='btn-wrapper'>
-          <button onClick={this.onPrevClick}>{"< Prev"}</button>
-          <button onClick={this.onNextClick}>{"Next >"}</button>
-        </div>
+        <div className='btn-next-prev_wrapper'>
+          <Button
+            variant='outlined'
+            onClick={this.onPrevClick}
+            endIcon={<ArrowBackIosIcon />}
+          ></Button>
 
+          <Button
+            variant='outlined'
+            onClick={this.onNextClick}
+            endIcon={<ArrowForwardIosIcon />}
+          ></Button>
+        </div>
         <Timeline
           groups={groups}
           items={items}
