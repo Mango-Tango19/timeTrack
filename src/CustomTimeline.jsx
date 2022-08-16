@@ -1,45 +1,157 @@
-import React, { Component } from "react";
+import React from "react";
+import "react-calendar-timeline/lib/Timeline.css";
+
+//https://github.com/namespace-ee/react-calendar-timeline/tree/master/examples
+
+import Timeline, {
+    TimelineHeaders,
+    DateHeader
+  }  from "react-calendar-timeline";
+
+import "react-calendar-timeline/lib/Timeline.css";
 import moment from "moment";
 
-import Timeline from "react-calendar-timeline";
+const keys = {
+    groupIdKey: "id",
+    groupTitleKey: "title",
+    groupRightTitleKey: "rightTitle",
+    itemIdKey: "id",
+    itemTitleKey: "title",
+    itemDivTitleKey: "title",
+    itemGroupKey: "group",
+    itemTimeStartKey: "start",
+    itemTimeEndKey: "end",
+    groupLabelKey: "title"
+  };
+  
 
-import generateFakeData from "./generate-fake-data";
+const groups = [
+  { id: '1', title: "Абрамов Алексей Васильевич", stackItems: true,  rightTitle: 'title in the right sidebar' },
+  { id: '2', title: "Аванесян Арсен Арменович", stackItems: true,  rightTitle: 'title in the right sidebar'  },
+  { id: '3', title: "Белицкая Зинаида Сергеевна", stackItems: true,  rightTitle: 'title in the right sidebar'  },
+  { id: '4', title: "Боровских Илья Юрьевич", stackItems: true,  rightTitle: 'title in the right sidebar'  },
+];
 
-var keys = {
-  groupIdKey: "id",
-  groupTitleKey: "title",
-  groupRightTitleKey: "rightTitle",
-  itemIdKey: "id",
-  itemTitleKey: "title",
-  itemDivTitleKey: "title",
-  itemGroupKey: "group",
-  itemTimeStartKey: "start",
-  itemTimeEndKey: "end",
-  groupLabelKey: "title"
-};
+// const calendarItems = [
+//     {
+//       id: 12,
+//       group: 1,
+//       title: "Отпуск",
+//       start_time: 1662276194367,
+//       end_time: 1664868194367,
+//       canMove: false,
+//       canResize: false,
+//       canChangeGroup: false,
+//     },
+//     {
+//         id: 13,
+//         group: 2,
+//         title: "Административный отпуск",
+//         start_time: 1662276194367,
+//         end_time: 1664868194367,
+//         canMove: false,
+//         canResize: false,
+//         canChangeGroup: false,
+//       }
+// ]
 
-export default class App extends Component {
+const items = [
+  {
+    id: '1',
+    group: '1',
+    title: "Отпуск",
+    start_time: moment(),
+    end_time: moment().add(6, "day"),
+    canMove: false,
+    canResize: false,
+    canChangeGroup: false,
+    itemProps: {
+      // these optional attributes are passed to the root <div /> of each item as <div {...itemProps} />
+      "data-custom-attribute": "Random content",
+      "aria-hidden": true,
+      onDoubleClick: () => {
+        console.log("You clicked double!");
+      },
+      className: "weekend",
+     
+    },
+  },
+  {
+    id:'2',
+    group: '2',
+    title: "План отпуска",
+    start_time: moment().add(-0.5, "day"),
+    end_time: moment().add(3, "day"),
+    canMove: false,
+    canResize: false,
+    canChangeGroup: false,
+    itemProps: {
+      // these optional attributes are passed to the root <div /> of each item as <div {...itemProps} />
+      "data-custom-attribute": "Random content",
+      "aria-hidden": true,
+      onDoubleClick: () => {
+        console.log("You clicked double!");
+      },
+      className: "weekend_plan",
+     
+    },
+  },
+  {
+    id: '3',
+    group: '1',
+    title: "Больничный",
+    start_time: moment().add(1, "day"),
+    end_time: moment().add(3, "day"),
+    canMove: false,
+    canResize: false,
+    canChangeGroup: false,
+    className: "sick",
+  },
+];
+
+export default class App extends React.Component {
   constructor(props) {
     super(props);
-
-    const { groups, items } = generateFakeData();
-    const defaultTimeStart = moment()
-      .startOf("day")
-      .toDate();
-    const defaultTimeEnd = moment()
-      .startOf("day")
-      .add(1, "day")
-      .toDate();
+    const visibleTimeStart = moment().startOf('month').valueOf();
+    const visibleTimeEnd   = moment().endOf('month').valueOf();
 
     this.state = {
       groups,
       items,
-      defaultTimeStart,
-      defaultTimeEnd
+      visibleTimeStart,
+      visibleTimeEnd,
     };
   }
 
+  onPrevClick = () => {
+    this.setState((state) => {
+      const zoom = state.visibleTimeEnd - state.visibleTimeStart;
+      return {
+        visibleTimeStart: state.visibleTimeStart - zoom,
+        visibleTimeEnd: state.visibleTimeEnd - zoom,
+      };
+    });
+  };
+
+  onNextClick = () => {
+    this.setState((state) => {
+      const zoom = state.visibleTimeEnd - state.visibleTimeStart;
+      console.log({
+        visibleTimeStart: state.visibleTimeStart + zoom,
+        visibleTimeEnd: state.visibleTimeEnd + zoom,
+      });
+      return {
+        visibleTimeStart: state.visibleTimeStart + zoom,
+        visibleTimeEnd: state.visibleTimeEnd + zoom,
+      };
+    });
+  };
+  handleItemSelect = (itemId, _, time) => {
+    console.log("Selected: " + itemId, moment(time).format());
+  };
+
   itemRenderer = ({ item, timelineContext, itemContext, getItemProps, getResizeProps }) => {
+    debugger
     const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
     const backgroundColor = itemContext.selected ? (itemContext.dragging ? "red" : item.selectedBgColor) : item.bgColor;
     const borderColor = itemContext.resizing ? "red" : item.color;
@@ -75,68 +187,37 @@ export default class App extends Component {
           {itemContext.title}
         </div>
 
-        {itemContext.useResizeHandle ? <div {...rightResizeProps} /> : null}
       </div>
     );
   };
-
-  handleItemMove = (itemId, dragTime, newGroupOrder) => {
-    const { items, groups } = this.state;
-
-    const group = groups[newGroupOrder];
-
-    this.setState({
-      items: items.map(item =>
-        item.id === itemId
-          ? Object.assign({}, item, {
-              start: dragTime,
-              end: dragTime + (item.end - item.start),
-              group: group.id
-            })
-          : item
-      )
-    });
-
-    console.log("Moved", itemId, dragTime, newGroupOrder);
-  };
-
-  handleItemResize = (itemId, time, edge) => {
-    const { items } = this.state;
-
-    this.setState({
-      items: items.map(item =>
-        item.id === itemId
-          ? Object.assign({}, item, {
-              start: edge === "left" ? time : item.start,
-              end: edge === "left" ? item.end : time
-            })
-          : item
-      )
-    });
-
-    console.log("Resized", itemId, time, edge);
-  };
-
+  
   render() {
-    const { groups, items, defaultTimeStart, defaultTimeEnd } = this.state;
+    const { visibleTimeStart, visibleTimeEnd } = this.state;
 
     return (
-      <Timeline
-        groups={groups}
-        items={items}
-        keys={keys}
-        itemTouchSendsClick={false}
-        stackItems
-        itemHeightRatio={0.75}
-        showCursorLine
-        canMove={false}
-        canResize={false}
-        defaultTimeStart={defaultTimeStart}
-        defaultTimeEnd={defaultTimeEnd}
-        itemRenderer={this.itemRenderer}
-        onItemMove={this.handleItemMove}
-        onItemResize={this.handleItemResize}
-      />
+      <div>
+        <button onClick={this.onPrevClick}>{"< Prev"}</button>
+        <button onClick={this.onNextClick}>{"Next >"}</button>
+        <Timeline
+          groups={groups}
+          items={items}
+          onItemSelect={this.handleItemSelect}
+          canSelect
+          visibleTimeStart={visibleTimeStart}
+          visibleTimeEnd={visibleTimeEnd}
+          buffer={1}
+          sidebarWidth={200}
+        //   itemRenderer={this.itemRenderer}
+        //   keys={keys}
+        >
+        <TimelineHeaders className="sticky">
+        
+          <DateHeader unit="primaryHeader" />
+        
+          <DateHeader />
+        </TimelineHeaders>
+        </Timeline>
+      </div>
     );
   }
 }
